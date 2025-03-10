@@ -161,6 +161,9 @@ When a forge falls below minimum collateral ratio, anyone can trigger a (partial
   - 10% of overcollateral as liquidation incentive
 - 10% of overcollateral goes to treasury
 
+
+![User-Funded Liquidation](LiquidationUser.png)
+
 **Example: User-Funded Liquidation of a bUSD-Forge**
 
 bUSD-Forge A has a minimum collateral ratio of 120%. It currently holds cbBTC collateral worth $119 (based on the oracle price of cbBTC) and a 100 bUSD loan (including accrued interest). This gives a collateral ratio of 119% (119 / 100), meaning the forge is undercollateralized and eligible for liquidation.
@@ -188,14 +191,15 @@ Bob’s 1.9% profit incentivizes liquidators to maintain system health, while th
 
 
 
-
-### 6.2 Treasury-Initiated Liquidations
+### 6.2 Treasury-Funded Liquidations
 - Uses treasury funds to pay back portion/full loan amount
 - Treasury receives:
   - Corresponding collateral
   - 15% of overcollateral
 - Liquidator receives:
   - 5% of overcollateral as compensation for triggering the liquidation
+
+![Treasury-Funded Liquidation](LiquidationTreasury.png)
 
 **Example: Treasury-Funded Liquidation of an RWA-Forge**
 
@@ -222,8 +226,6 @@ Alice triggers a treasury-funded liquidation for 20% of the forge’s loan, usin
 Alice earns a small reward for her role in maintaining system health, while the treasury benefits from the liquidation by acquiring collateral at a favorable rate. The forge owner loses a modest portion of their overcollateral to restore stability, and the forge’s health is incrementally improved.
 
 Note that the accrued interest on the loan is reduced from the forge balance, but stays in the treasury. This is because the treasury receives all paid interests, so if the treasury pays back a loan, the interest is kept there. 
-
-![Liquidation Mechanism](Liquidations.png)
 
 ## 7. Risk Management
 
