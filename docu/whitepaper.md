@@ -1,3 +1,4 @@
+![](header.png)
 # Decentralized RWA System on Base: Technical Whitepaper
 
 ## Abstract
@@ -90,7 +91,7 @@ See the table below for fee scaling in the Asset-Stability mechanism:
 
 *Example*: At 30% AlgoRatio, the Asset stability multiplier is 1.5x, scaling fees proportionally. 
 
-## 3. LoanToken (RWA) System
+## 3. RWA System
 
 ### 3.1 RWA Forge Specifications
 - Supported collaterals: bUSD, cbBTC, wETH
@@ -156,15 +157,14 @@ The Asset-Stability mechanism incurs fees based on asset volatility and AlgoRati
 When a forge falls below minimum collateral ratio, anyone can trigger a (partial) liquidation, either with their own funds or via treasury funds. Both methods pay part of the overcollateralization as an incentive/fee, with the remainder staying in the forge to increase its collateral ratio, improving forge health with each partial liquidation.
 
 ### 6.1 User-Funded Liquidations
-- Liquidator pays back portion/full loan amount
-- Receives corresponding collateral plus rewards:
-  - 10% of overcollateral as liquidation incentive
-- 10% of overcollateral goes to treasury
-
+1. Liquidator pays back portion/full loan amount
+2. Liquidator receives corresponding collateral plus 10% of overcollateral as liquidation incentive
+3. 10% of overcollateral goes to treasury
+4. remaining overcollateral stays in the forge, improving forge health
 
 ![User-Funded Liquidation](LiquidationUser.png)
 
-**Example: User-Funded Liquidation of a bUSD-Forge**
+#### Example: User-Funded Liquidation of a bUSD-Forge
 
 bUSD-Forge A has a minimum collateral ratio of 120%. It currently holds cbBTC collateral worth $119 (based on the oracle price of cbBTC) and a 100 bUSD loan (including accrued interest). This gives a collateral ratio of 119% (119 / 100), meaning the forge is undercollateralized and eligible for liquidation.
 
@@ -192,16 +192,15 @@ Bob’s 1.9% profit incentivizes liquidators to maintain system health, while th
 
 
 ### 6.2 Treasury-Funded Liquidations
-- Uses treasury funds to pay back portion/full loan amount
-- Treasury receives:
-  - Corresponding collateral
-  - 15% of overcollateral
-- Liquidator receives:
-  - 5% of overcollateral as compensation for triggering the liquidation
+1. Liquidator triggers the liquidation
+2. Treasury funds are used to pay back portion/full loan amount
+3. Treasury receives corresponding collateral plus 15% of overcollateral
+4. Liquidator receives 5% of overcollateral as compensation for triggering the liquidation
+5. remaining overcollateral stays in the forge, improving forge health
 
 ![Treasury-Funded Liquidation](LiquidationTreasury.png)
 
-**Example: Treasury-Funded Liquidation of an RWA-Forge**
+#### Example: Treasury-Funded Liquidation of an RWA-Forge
 
 Assume a SPY price in the oracle of $1000. RWA-Forge B has a minimum collateral ratio of 150%. It currently holds 145 bUSD collateral (worth $145 in the forge) and a 0,1 bSPY loan  (valued at $100 via oracle price, including accrued interest). This gives a collateral ratio of 145% (145 / 100), meaning the forge is undercollateralized and eligible for liquidation.
 
