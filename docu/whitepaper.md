@@ -67,14 +67,14 @@ bUSD can be created through two distinct mechanisms:
   - Based on bUSD/USDC DEX pool price
 
 ### 2.3 Algorithmic bUSD
-Algorithmic bUSD represents the portion of bUSD supply not backed by collateral but created through mechanisms like negative interest rates or token-to-bUSD conversions. It’s calculated as:
+Algorithmic bUSD represents the portion of bUSD supply not backed by collateral but created through mechanisms like negative interest rates or bAsset-to-bUSD conversions. It’s calculated as:
 
 ```
 BackedValue = TotalUSDLoans + USDValueInStability
 AlgorithmicUSD = TotalUSDSupply - BackedValue
 AlgoRatio = AlgorithmicUSD / TotalUSDSupply
 ```
-To manage high AlgoRatios, a dynamic fee applies to actions increasing it (e.g., loan paybacks, stability burns, LoanToken-to-bUSD conversions). These fees are burned to reduce AlgoRatio. 
+To manage high AlgoRatios, a dynamic fee applies to actions increasing it (e.g., loan paybacks, stability burns, bAsset-to-bUSD conversions). These fees are burned to reduce AlgoRatio. 
 
 The dynamic fee is calculated as:
 
@@ -98,7 +98,7 @@ See the table below for fee scaling in the Asset-Stability mechanism:
 - Minimum collateralization ratio: 150%
 - Valuation mechanism:
   - bUSD valued at $1
-  - Other assets valued at oracle price in $
+  - bAssets valued at oracle price in $
 
 ### 3.2 RWA Token Interest
 - Default interest rate: 1%
@@ -110,7 +110,7 @@ See the table below for fee scaling in the Asset-Stability mechanism:
 
 ### 4.1 Operation
 - Conversion once per week
-- Bidirectional conversion between loan tokens and bUSD
+- Bidirectional conversion between bAssets and bUSD
 - Pre-lock requirement before conversion block
 - Post-conversion claim process
 - May generate algorithmic bUSD
@@ -150,8 +150,8 @@ The Asset-Stability mechanism incurs fees based on asset volatility and AlgoRati
 
 ### 5.2 Treasury Operations
 - Can initiate liquidations
-- Can incentivize liquidity mining for LoanToken-bUSD pools via treasury funds
-- Might burn LoanTokens to reduce AlgoRatio
+- Can incentivize liquidity mining for bAsset-bUSD pools via treasury funds
+- Might burn bAssets or bUSD to reduce AlgoRatio
 
 ## 6. Liquidation Mechanism
 When a forge falls below minimum collateral ratio, anyone can trigger a (partial) liquidation, either with their own funds or via treasury funds. Both methods pay part of the overcollateralization as an incentive/fee, with the remainder staying in the forge to increase its collateral ratio, improving forge health with each partial liquidation.
@@ -202,9 +202,9 @@ Bob’s 1.9% profit incentivizes liquidators to maintain system health, while th
 
 #### Example: Treasury-Funded Liquidation of an RWA-Forge
 
-Assume a SPY price in the oracle of $1000. RWA-Forge B has a minimum collateral ratio of 150%. It currently holds 145 bUSD collateral (worth $145 in the forge) and a 0,1 bSPY loan  (valued at $100 via oracle price, including accrued interest). This gives a collateral ratio of 145% (145 / 100), meaning the forge is undercollateralized and eligible for liquidation.
+Assume a SPY price in the oracle of $1000. RWA-Forge B has a minimum collateral ratio of 150%. It currently holds 145 bUSD collateral (worth $145 in the forge) and a 0.1 bSPY loan  (valued at $100 via oracle price, including accrued interest). This gives a collateral ratio of 145% (145 / 100), meaning the forge is undercollateralized and eligible for liquidation.
 
-Alice triggers a treasury-funded liquidation for 20% of the forge’s loan, using the treasury’s funds. The treasury uses 0,02 bSPY to repay 20% of the RWA loan. At a collateral ratio of 145%, the 0.02 bSPY (valued at $20 in the forge) corresponds to $29 worth of bUSD collateral: 20 to back the repaid loan portion and 9 as overcollateral. The liquidation proceeds as follows:
+Alice triggers a treasury-funded liquidation for 20% of the forge’s loan, using the treasury’s funds. The treasury uses 0.02 bSPY to repay 20% of the RWA loan. At a collateral ratio of 145%, the 0.02 bSPY (valued at $20 in the forge) corresponds to $29 worth of bUSD collateral: 20 to back the repaid loan portion and 9 as overcollateral. The liquidation proceeds as follows:
 
 - *Treasury’s Actions and Rewards*:
   - The treasury uses 0.02 bSPY to reduce the loan in the forge (accrued interest is retained by the treasury, and the principal is burned).
