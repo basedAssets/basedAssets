@@ -58,6 +58,10 @@ bUSD can be created through two distinct mechanisms:
    - 5% conversion fee (decreasing over time)
    - Bidirectional conversion (mint/burn)
    - Burn operation available when USDC exists in stability pool
+   - **USDC Peg Adjustment Mechanism**: To protect the stability pool during USDC price deviations:
+     - *When USDC trades at a discount (below $1)*: The stability module uses the market price of USDC (e.g., $0.95) for USDC-to-bUSD conversions, to prevent minting too many bUSD. However, bUSD-to-USDC conversions use a fixed $1 price per USDC, preserving USDC reserves in the stability.
+     - *When USDC trades at a premium (above $1)*: The stability module uses the market price of USDC (e.g., $1.05) for bUSD-to-USDC conversions, ensuring fair value for users burning bUSD. Conversely, USDC-to-bUSD conversions use a fixed $1 price per USDC, preventing excessive bUSD minting.
+   - This dynamic pricing ensures the stability pool remains resilient during USDC off-peg events, widening the USDC-bUSD trading range to facilitate natural rebalancing without draining reserves.
 
 ### 2.2 Interest Rate Mechanism
 - Base interest rate: 0.1%
