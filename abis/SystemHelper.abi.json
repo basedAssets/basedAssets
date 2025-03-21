@@ -1,0 +1,349 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "contract AssetSystem",
+        "name": "_system",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "HelperNotCalledBySystem",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TokenSystemNoSplit",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract LoanToken",
+        "name": "loanToken",
+        "type": "address"
+      }
+    ],
+    "name": "TokenSystemTokenAlreadySplit",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract LoanToken",
+        "name": "olToken",
+        "type": "address"
+      }
+    ],
+    "name": "_getSplitResult",
+    "outputs": [
+      {
+        "internalType": "contract LoanToken",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract LoanToken",
+        "name": "olToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "splitRatio",
+        "type": "uint256"
+      },
+      {
+        "internalType": "contract LoanToken",
+        "name": "newToken",
+        "type": "address"
+      }
+    ],
+    "name": "addTokenSplit",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract LoanToken",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "algoRatio",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "calcUSDFeeE4",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "feeE4",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "calcUSDInterestRate",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "forgeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "ratioE4",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "collFilter",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "loanFilter",
+        "type": "address"
+      }
+    ],
+    "name": "checkLiqFilter",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "result",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "forgeId",
+        "type": "uint256"
+      }
+    ],
+    "name": "forgeHasActivePrices",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "result",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "schemeId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getCollateralsInScheme",
+    "outputs": [
+      {
+        "internalType": "contract IERC20Metadata[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "collateralFilter",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "loanFilter",
+        "type": "address"
+      }
+    ],
+    "name": "getForgesInLiquidation",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "forgeId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "collValue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "loanValue",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct AssetSystemHelper.ForgeData[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "schemeId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getLoansInScheme",
+    "outputs": [
+      {
+        "internalType": "contract LoanToken[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "predecessors",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract LoanToken",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "projectedAlgoRatio",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "system",
+    "outputs": [
+      {
+        "internalType": "contract AssetSystem",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "tokenSplits",
+    "outputs": [
+      {
+        "internalType": "contract LoanToken",
+        "name": "originalToken",
+        "type": "address"
+      },
+      {
+        "internalType": "contract LoanToken",
+        "name": "splitToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "splitratio",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint16",
+        "name": "originalTokenVersion",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

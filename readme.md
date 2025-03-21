@@ -8,6 +8,8 @@ Everything is up for discussion, so if you are a DeFi Enthusiast: join the commu
 
 For details about the System please read the [whitepaper](/docu/whitepaper.md)
 
+See the [Contract Reference](/docu/contractReference.md) for a reference of the important functions and views in the system.
+
 Implementation, testnet deployment and more user guides will follow.
 
 ## The Mission
