@@ -42,6 +42,11 @@ This section illustrates how users interact with the system through a practical 
 
 These examples show how users can leverage the system for lending and stability while managing risks.
 
+### 1.3 Decentralized RWA issuance
+
+While centralized RWA systems rely on 1 issuer, which can be attacked/shut down, decentralized issuance has no single point of failure.
+Decentralized issuers buy the RWA on the real market and mint+sell the same amount in based assets to provide supply. Stability mechanisms ensure that the issuer has limited risk from price divergence. Based Assets therefore provide a framework for decentralized RWA issuance.
+
 ## 2. bUSD Stablecoin
 
 ### 2.1 Creation Methods
@@ -54,14 +59,15 @@ bUSD can be created through two distinct mechanisms:
    - bUSD is always valued at $1 in the forge
 
 2. **Stability Module**
-   - Direct USDC-to-bUSD conversion
-   - 5% conversion fee (decreasing over time)
+   - Direct Stability-to-bUSD conversion
+   - multiple stability tokens possible, starting with USDC
+   - 5% conversion fee (likely reduced over time)
    - Bidirectional conversion (mint/burn)
-   - Burn operation available when USDC exists in stability pool
-   - **USDC Peg Adjustment Mechanism**: To protect the stability pool during USDC price deviations:
-     - *When USDC trades at a discount (below $1)*: The stability module uses the market price of USDC (e.g., $0.95) for USDC-to-bUSD conversions, to prevent minting too many bUSD. However, bUSD-to-USDC conversions use a fixed $1 price per USDC, preserving USDC reserves in the stability.
-     - *When USDC trades at a premium (above $1)*: The stability module uses the market price of USDC (e.g., $1.05) for bUSD-to-USDC conversions, ensuring fair value for users burning bUSD. Conversely, USDC-to-bUSD conversions use a fixed $1 price per USDC, preventing excessive bUSD minting.
-   - This dynamic pricing ensures the stability pool remains resilient during USDC off-peg events, widening the USDC-bUSD trading range to facilitate natural rebalancing without draining reserves.
+   - Burn operation available when stability token exists in stability pool
+   - **stabilityToken Peg Adjustment Mechanism**: To protect the stability pool during stabilityToken price deviations:
+     - *When stabilityToken trades at a discount (below $1)*: The stability module uses the market price of stabilityToken (e.g., $0.95) for stabilityToken-to-bUSD conversions, to prevent minting too many bUSD. However, bUSD-to-stabilityToken conversions use a fixed $1 price per stabilityToken, preserving stabilityToken reserves in the stability.
+     - *When stabilityToken trades at a premium (above $1)*: The stability module uses the market price of stabilityToken (e.g., $1.05) for bUSD-to-stabilityToken conversions, ensuring fair value for users burning bUSD. Conversely, stabilityToken-to-bUSD conversions use a fixed $1 price per stabilityToken, preventing excessive bUSD minting.
+   - This dynamic pricing ensures the stability pool remains resilient during stabilityToken off-peg events, widening the stabilityToken-bUSD trading range to facilitate natural rebalancing without draining reserves.
 
 ### 2.2 Interest Rate Mechanism
 - Base interest rate: 0.1%
@@ -69,6 +75,9 @@ bUSD can be created through two distinct mechanisms:
   - Negative when bUSD trades at premium (up to -200% at 20% premium)
   - Positive when bUSD trades at discount (up to 5000% at 100% discount)
   - Based on bUSD/USDC DEX pool price
+
+Governance updates to interest rates are subject to a per-update cap to avoid sudden shocks: any single update may change the interest rate by at most 5% APR (up or down). This rate-limiting prevents abrupt policy swings and gives markets time to adjust to gradual parameter changes.
+bUSD interest change happens every 12 hours.
 
 ### 2.3 Algorithmic bUSD
 Algorithmic bUSD represents the portion of bUSD supply not backed by collateral but created through mechanisms like negative interest rates or bAsset-to-bUSD conversions. It’s calculated as:
@@ -78,7 +87,7 @@ BackedValue = TotalUSDLoans + USDValueInStability
 AlgorithmicUSD = TotalUSDSupply - BackedValue
 AlgoRatio = AlgorithmicUSD / TotalUSDSupply
 ```
-To manage high AlgoRatios, a dynamic fee applies to actions increasing it (e.g., loan paybacks, stability burns, bAsset-to-bUSD conversions). These fees are burned to reduce AlgoRatio. 
+To manage high AlgoRatios, a dynamic fee applies to actions increasing it (e.g., loan paybacks, stability burns, bAsset-to-bUSD conversions). These fees are burned to reduce AlgoRatio. The fee is updated every 12 hours.
 
 The dynamic fee is calculated as:
 
@@ -89,9 +98,9 @@ See the table below for fee scaling in the Asset-Stability mechanism:
 **Dynamic Fee Multiplier Table**  
 | AlgoRatio Range | Dynamic Fee | AssetStability Fee Multiplier       | bUSD Generation Status |
 |-----------------|-------------|-------------------------------------|-------------------------|
-| 0-10%           | 0% | 1.0x (base fee)     | Enabled                 |
-| 10-50%          | 0% - 4% | 1.0x to 2.0x (linear increase) | Enabled       |
-| 50%-100%        | 4% - 20% | 2x                 | Disabled                |
+| <0%           | 0% | 1.0x (base fee)     | Enabled                 |
+| 0-20%          | 0% - 1% | 1.0x to 2.0x (linear increase) | Enabled       |
+| 20%-100%        | 1% - 25% | 2x                 | Disabled                |
 
 *Example*: At 30% AlgoRatio, the Asset stability multiplier is 1.5x, scaling fees proportionally. 
 
@@ -116,11 +125,14 @@ See the table below for fee scaling in the Asset-Stability mechanism:
 - Conversion once per week
 - Bidirectional conversion between bAssets and bUSD
 - Pre-lock requirement before conversion block
-- Post-conversion claim process
+- Post-conversion claim process with 7-day claim window
+  - Users must claim their converted tokens within 7 days after the conversion period ends
+  - After the claim window expires, anyone can trigger a force-refund to clean up pending conversions
+  - Refunds incur a 0.1% cancellation fee (configurable)
 - May generate algorithmic bUSD
 - Operation limitations:
-  - Completely disabled for bUSD generation when AlgoRatio > 50%
-  - Fee multiplier applied between 10-50% AlgoRatio
+  - Completely disabled for bUSD generation when AlgoRatio > 20%
+  - Fee multiplier applied between 0-20% AlgoRatio
 
 ### 4.2 Fee Structure
 The Asset-Stability mechanism incurs fees based on asset volatility and AlgoRatio. Base fees reflect asset risk, while dynamic multipliers adjust for system stability, as shown below:
@@ -132,10 +144,16 @@ The Asset-Stability mechanism incurs fees based on asset volatility and AlgoRati
 | Medium           | 5%       |
 | High             | 15%      |
 
-**Dynamic Fee Multiplier**  
-- 0-10% AlgoRatio: 1.0x (base fee)
-- 10-50% AlgoRatio: Linear increase from 1.0x to 2.0x (e.g., 1.5x at 30%)  
-- Above 50% AlgoRatio: bUSD generation disabled  
+**Dynamic Fee Multiplier based on bUSD**  
+- <0% AlgoRatio: 1.0x (base fee)
+- 0-20% AlgoRatio: Linear increase from 1.0x to 2.0x (e.g., 1.5x at 30%)  
+- Above 20% AlgoRatio: bUSD generation disabled  
+
+**Dynamic Fee Multiplier based on Asset algo ratio**
+To prevent excessive creation of algo bAssets, a dynamic fee multiplier (on top of the bUSD multiplier) applies to bUSD-to-bAsset conversion (aka creation of more bAsset via Stability) when bAsset algo ratio increases.
+- <0% bAsset AlgoRatio: 1.0x (base fee)
+- 0-20% bAsset AlgoRatio: Linear increase from 1.0x to 2.0x (e.g., 1.5x at 30%) 
+- >20% bAsset algoRatio: 2x multiplier
 
 *Example*: Converting a high-volatility RWA token (15% base fee) at 30% AlgoRatio incurs a 1.5x multiplier, resulting in a 22.5% total fee.
 
@@ -143,28 +161,69 @@ The Asset-Stability mechanism incurs fees based on asset volatility and AlgoRati
 - Maximum conversion volume per period: 10% of total bUSD supply
 - Applies to net bUSD delta in each stability period
 
-## 5. Treasury System
+## 5. Referral System
 
-### 5.1 Treasury Inflow Streams
-- All system fees directed to treasury (bUSD- and asset stability fees)
-- Exception: Dynamic bUSD fees are burned directly
+### 5.1 Purpose and Incentive Structure
+The referral system incentivizes community members to build their own user interfaces and tools for the Asset System. By allowing UIs to specify themselves as referrers, they earn a percentage of transaction fees, creating a sustainable business model for independent developers and platforms.
+
+### 5.2 Referral Mechanism
+- **Referrer Parameter**: All user-facing transactions (deposit, withdraw, take loan, payback loan) accept an optional referrer address
+- **Fee Split**: When a referrer address is provided:
+  - A configurable percentage (referrerFeeRatioE4) of transaction fees goes to the referrer
+  - The remaining portion goes to the treasury
+  - If no referrer is specified, 100% of fees go to the treasury
+- **Configurable Ratio**: The referrer fee ratio is adjustable by governance (capped at 100% of transaction fees)
+
+### 5.3 Fee Distribution Examples
+For a transaction with a 0.1% fee on $1000 (=$1 fee):
+- **With Referrer (50% referrer ratio)**:
+  - Referrer receives: $0.50
+  - Treasury receives: $0.50
+- **Without Referrer**:
+  - Treasury receives: $1.00
+
+### 5.4 Applicable Transactions
+Referral fees apply to:
+- **Collateral Deposits**: Percentage of deposited collateral
+- **Collateral Withdrawals**: Percentage of withdrawn collateral
+- **Loan Taking**: Percentage of minted loan tokens
+- **Loan Payback**: Percentage of repaid loan amount
+
+### 5.5 Benefits for the Ecosystem
+- **UI Development Incentive**: Developers can monetize their interfaces without charging users directly
+- **Increased Accessibility**: Multiple UIs with different features and user experiences
+- **Decentralized Growth**: Community-driven expansion rather than single-entity control
+- **Sustainable Revenue**: Referrers earn ongoing income from user activity
+- **Competition and Innovation**: Multiple UI providers compete on user experience and features
+
+## 6. Treasury System
+
+### 6.1 Treasury Inflow Streams
+- Transaction fees (after referrer splits, if applicable):
+  - Forge creation fees
+  - Deposit and withdrawal fees
+  - Loan taking and payback fees
+- All Asset-Stability mechanism fees (bUSD and bAsset conversions)
+- Exception: Dynamic bUSD fees are burned directly to reduce AlgoRatio
 - Interest payments from both forge types
 - 10% of overcollateral from liquidations with user funds
 - Collateral + 15% of overcollateral from liquidations via treasury funds
 
-### 5.2 Treasury Operations
+### 6.2 Treasury Operations
 - Can initiate liquidations
 - Can incentivize liquidity mining for bAsset-bUSD pools via treasury funds
 - Might burn bAssets or bUSD to reduce AlgoRatio
 
-## 6. Liquidation Mechanism
+## 7. Liquidation Mechanism
 When a forge falls below minimum collateral ratio, anyone can trigger a (partial) liquidation, either with their own funds or via treasury funds. Both methods pay part of the overcollateralization as an incentive/fee, with the remainder staying in the forge to increase its collateral ratio, improving forge health with each partial liquidation.
 
-### 6.1 User-Funded Liquidations
+### 7.1 User-Funded Liquidations
 1. Liquidator pays back portion/full loan amount
-2. Liquidator receives corresponding collateral plus 10% of overcollateral as liquidation incentive
-3. 10% of overcollateral goes to treasury
-4. remaining overcollateral stays in the forge, improving forge health
+2. Liquidator receives corresponding collateral plus their share of overcollateral (default: 10%) as liquidation incentive
+3. Treasury receives its share of overcollateral (default: 10%)
+4. Remaining overcollateral stays in the forge, improving forge health
+
+**Note**: These percentages are governance parameters (`liquidatorFeeE4` and `treasuryFeeE4`) set to 10%/10% at deployment but may be adjusted to optimize system security and efficiency.
 
 ![User-Funded Liquidation](LiquidationUser.png)
 
@@ -195,12 +254,14 @@ Bob’s 1.9% profit incentivizes liquidators to maintain system health, while th
 
 
 
-### 6.2 Treasury-Funded Liquidations
+### 7.2 Treasury-Funded Liquidations
 1. Liquidator triggers the liquidation
 2. Treasury funds are used to pay back portion/full loan amount
-3. Treasury receives corresponding collateral plus 15% of overcollateral
-4. Liquidator receives 5% of overcollateral as compensation for triggering the liquidation
-5. remaining overcollateral stays in the forge, improving forge health
+3. Treasury receives corresponding collateral plus its configured share of overcollateral (default: 15%)
+4. Transaction trigger receives their configured reward (default: 5%) for initiating the liquidation
+5. Remaining overcollateral stays in the forge, improving forge health
+
+**Note**: These percentages are governance parameters (`treasuryFeeTreasuryE4` and `liquidatorFeeTreasuryE4`) and may be adjusted to balance incentives and system reserves.
 
 ![Treasury-Funded Liquidation](LiquidationTreasury.png)
 
@@ -230,24 +291,49 @@ Alice earns a small reward for her role in maintaining system health, while the 
 
 Note that the accrued interest on the loan is reduced from the forge balance, but stays in the treasury. This is because the treasury receives all paid interests, so if the treasury pays back a loan, the interest is kept there. 
 
-## 7. Risk Management
+## 8. Risk Management
 
-### 7.1 Collateral Risk
+### 8.1 Collateral Risk
 - Multiple high-quality collateral options
 - Conservative collateralization ratios
 - Oracle-based price feeds for valuation
 - Liquidation mechanisms for undercollateralized positions
+ - Collateral factor updates are rate-limited: any single governance update may change a token's collateral factor by at most 10% to avoid sudden de-risking or unexpected liquidation pressure on existing forges.
 
-### 7.2 Stability Risks
+### 8.2 Stability Risks
 - Volume limitations on Asset-Stability
 - Fee structure discouraging excessive arbitrage
 - Dynamic interest rates for market alignment
 - Algorithmic bUSD monitoring and fee system
 
-## 8. Stock Split Handling
+### 8.3 Governance Parameter Safety
+
+To protect users from sudden parameter changes, the system implements rate-limiting on critical governance updates:
+
+**Interest Rate Changes**:
+- Maximum change: ±5% APR per 12-hour update period
+- Example: Cannot jump from 0.1% to 10% instantly
+- Requires multiple update cycles for large changes
+- Allows markets to adapt gradually
+
+**Collateral Factor Changes**:
+- Maximum change: ±10% per update
+- Example: Cannot change from 120% to 200% requirement instantly
+- Protects existing forges from sudden liquidation risk
+- Phase-in period for major ratio adjustments
+
+**Fee Parameters**:
+- Bounded by reasonable ranges in code
+- Liquidation fees: Total cannot exceed 100% of overcollateral
+- Transaction fees: Capped to prevent extraction attacks
+- Referral split: Limited to 0-100% of transaction fees
+
+These constraints ensure system stability and user protection while maintaining governance flexibility for optimization.
+
+## 9. Stock Split Handling
 RWAs tied to equities require split handling. The system is prepared to handle both forward and reverse stock splits.
 
-### 8.1 Split Initialization Process
+### 9.1 Split Initialization Process
 1. **Oracle Deactivation**
    - Oracle for affected token is deactivated
    - Prevents creation of new loans
@@ -266,7 +352,7 @@ RWAs tied to equities require split handling. The system is prepared to handle b
      - New token oracle is activated
      - System maintains price consistency across transition
 
-### 8.2 Token Conversion Process
+### 9.2 Token Conversion Process
 1. **User Token Conversion**
    - Users convert old tokens to new via the asset system
    - Conversion ratio based on split definition
@@ -282,7 +368,7 @@ RWAs tied to equities require split handling. The system is prepared to handle b
    - Ensures liquidation remains possible if old tokens become unavailable
    - Preserves system security and stability during transitions
 
-### 8.3 Split Impact Management
+### 9.3 Split Impact Management
 1. **System Parameters**
    - Collateralization ratios unchanged
    - Interest rates carry over to new tokens
@@ -292,42 +378,43 @@ RWAs tied to equities require split handling. The system is prepared to handle b
    - Automatic validation of conversion transactions
    - Protection against split-related arbitrage
 
-## 9. Conclusion
+## 10. Conclusion
 This system provides a framework for decentralized RWAs based on loan tokens while maintaining stability through multiple mechanisms. The dual-forge architecture, combined with stability modules, dynamic interest rates, and sophisticated liquidation mechanisms, creates a sustainable ecosystem for both stablecoin and loan token operations. The treasury system and algorithmic bUSD management provide additional layers of security and sustainability.
 
-## 10. Benefits for the Ecosystem
+## 11. Benefits for the Ecosystem
 
 The decentralized Asset system introduces a transformative approach to Real-World Asset (RWA) tokenization and lending, delivering tangible advantages to users, protocols, and the broader DeFi ecosystem. By leveraging a dual-forge architecture, dynamic pricing mechanisms, and user-driven minting, the system creates opportunities for participation, innovation, and financial empowerment. Below are the key benefits:
 
-### 10.1 Universal Access to Rising Asset Values
+### 11.1 Universal Access to Rising Asset Values
 - **Decentralized and Uncensorable**: Anyone with an internet connection can participate, free from intermediaries or geographic restrictions. The system operates 24/7 on the Base network, ensuring constant availability without downtime or censorship.
 - **Profit from Growth**: Users can mint, trade, or hold RWA tokens tied to real-world assets, benefiting from potential price increases in a transparent, decentralized marketplace.
 
-### 10.2 Flexible Trading Opportunities
+### 11.2 Flexible Trading Opportunities
 - **Long and Short Positions**: Users can speculate on RWA price movements by going long (buying tokens to profit from rising prices) or shorting (selling tokens to capitalize on declines). This flexibility empowers users to adapt to market conditions, whether bullish or bearish.
 - **Portfolio Diversification**: With RWAs representing various asset classes, users can build diversified portfolios, reducing risk and tapping into multiple markets—all within a single decentralized system.
 
-### 10.3 Loose Oracle Coupling for Regulatory Flexibility
+### 11.3 Loose Oracle Coupling for Regulatory Flexibility
 - **Innovative Price Connection**: RWA tokens are loosely tied to oracle prices without a fixed peg, offering a unique balance of real-world relevance and regulatory independence. This makes them ideal for protocols needing stock or asset price exposure without directly referencing regulated markets.
 - **Cross-Protocol Utility**: Other DeFi platforms can integrate RWAs as collateral, price feeds, or yield-bearing assets, fostering interoperability while sidestepping compliance hurdles tied to traditional financial instruments.
 
-### 10.4 Be Your Own Broker with Real Yield
+### 11.4 Be Your Own Broker with Real Yield
 - **Self-Directed Finance**: Users can mint RWAs via forges and manage their own lending positions, effectively acting as their own brokers. This eliminates reliance on centralized institutions and puts control in the hands of individuals.
 - **Earn Passive Income**: By staking RWA tokens in Liquidity Mining pools, users earn commissions from system fees and trading activity. This provides a real, sustainable yield on diversified basedAsset portfolios, rewarding active participation.
 
-### 10.5 Enhanced Stability and Resilience
+### 11.5 Enhanced Stability and Resilience
 - **Dynamic Stability Mechanisms**: The Asset-Stability mechanism and dynamic interest rates ensure RWA prices align with market trends over time, while bUSD remains a reliable anchor. This stability protects users and supports long-term ecosystem health.
 - **Robust Risk Management**: Overcollateralization, liquidation incentives, and treasury operations safeguard the system against volatility, ensuring it remains solvent and trustworthy even in turbulent markets.
 
-### 10.6 Empowerment Through Ownership
+### 11.6 Empowerment Through Ownership
 - **User-Driven Minting**: The forge system democratizes asset creation—anyone can mint RWAs or bUSD with supported collateral, lowering barriers to entry and encouraging widespread adoption.
-- **Community Governance Potential**: While not yet implemented, the treasury’s role in fee allocation and liquidity incentives lays the groundwork for future community-driven decision-making, aligning the system with DeFi’s ethos of decentralization.
+- **Community-Driven UI Development**: The referral system incentivizes developers to build custom interfaces, creating a diverse ecosystem of tools and experiences while allowing them to earn sustainable revenue from transaction fees.
+- **Community Governance Potential**: While not yet implemented, the treasury's role in fee allocation and liquidity incentives lays the groundwork for future community-driven decision-making, aligning the system with DeFi's ethos of decentralization.
 
-### 10.7 Economic Efficiency and Innovation
+### 11.7 Economic Efficiency and Innovation
 - **Low-Cost Operations**: By running on Base, the system minimizes transaction costs, making it affordable for users to mint, trade, and manage RWAs. This efficiency drives higher participation and liquidity.
 - **Catalyst for New Use Cases**: The availability of decentralized RWAs unlocks opportunities for developers to build novel applications—such as synthetic derivatives, insurance products, or tokenized real estate—expanding the boundaries of DeFi.
 
-### 10.8 A Sustainable Financial Future
+### 11.8 A Sustainable Financial Future
 - **Scalable Framework**: The dual-forge design and algorithmic bUSD management provide a scalable foundation that can accommodate growing demand and new asset types without compromising stability.
 - **Incentivized Participation**: Liquidators, liquidity providers, and forge operators all benefit from clear incentives (e.g., liquidation rewards, mining yields), creating a self-sustaining ecosystem where every role contributes to overall success.
 
